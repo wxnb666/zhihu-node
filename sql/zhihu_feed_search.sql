@@ -1,4 +1,5 @@
 -- 在库 zhihu 中执行（Navicat 查询窗口运行即可）
+-- 建表与热搜完成后，请再执行 sql/seed_feed_articles.sql 填充推荐流（多篇带正文）。
 
 -- 用户展示字段（已存在会报错，可忽略对应行）
 ALTER TABLE `user`
@@ -12,6 +13,7 @@ CREATE TABLE IF NOT EXISTS `feed_item` (
   `type` ENUM('question','article') NOT NULL DEFAULT 'article' COMMENT '内容类型',
   `title` VARCHAR(500) NOT NULL,
   `excerpt` TEXT NULL COMMENT '列表摘要',
+  `content` MEDIUMTEXT NULL COMMENT '正文（HTML/Markdown），为空时详情接口回退为 excerpt',
   `author_id` INT NOT NULL,
   `agree_count` INT UNSIGNED NOT NULL DEFAULT 0,
   `comment_count` INT UNSIGNED NOT NULL DEFAULT 0,
@@ -45,11 +47,5 @@ INSERT INTO `hot_search` (`keyword`, `heat_text`, `tag`, `sort_order`) VALUES
 ('程序员如何副业', '24 万', NULL, 4),
 ('这波 AI 浪潮怎么看', '15 万', '热', 5);
 
--- 示例推荐（仅当存在 user.id=1 时插入一条；没有可先注册/插入用户）
-INSERT INTO `feed_item` (`type`, `title`, `excerpt`, `author_id`, `agree_count`, `comment_count`, `favorite_count`, `like_count`)
-SELECT 'article',
-  '这波人工智能浪潮怎么越来越像泡沫了？',
-  '从资本热度、落地场景和工程化成本看，这一轮和以往周期有相似也有不同……',
-  `id`,
-  185, 84, 120, 6
-FROM `user` WHERE `id` = 1 LIMIT 1;
+-- 推荐流示例（多篇「文章/问题」+ 较长正文 content）：执行 sql/seed_feed_articles.sql
+-- 依赖：至少有一条 `user` 记录（会用 id 最小的用户作为 author）
